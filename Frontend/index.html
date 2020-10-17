@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+      <title>Our awesome game</title>
+      <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
+      <script src="eth.js"></script>
+  </head>
+
+  <body>
+
+    <script>
+
+      var hero;
+      var cursors;
+      var spaceBar;
+      var attckCooldown = 0;
+      var bullets = {};
+      var bulletCounter = 0;
+      var grunts = {};
+      var gruntsCounter = 0;
+      var gruntsCooldown = 0;
+      var savedScore = 0;
+      var score = 0;
+      var lives = 5;
+      var hp = 50;
+      var damage = 6;
+      var gameOver = false;
+      var level = 1;
+      var hpBonus = 0;
+      var heroMS = 150;
+      var movementBonus = 0;
+      var asBonus = 0;
+      var buyASbutton ;
+      var buyMovementbutton ;
+      var buyHPbutton;
+      var saveScore;
+      var back;
+      var saving;
+      var noscore;
+      var pauseFlag;
+      var spaceCd = 0;
+      var hpflag = true;
+      var gavehp = false;
+
+
+
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+
+
+      var config = {
+              width:800,
+              height:650,
+              type:Phaser.AUTO,
+
+              scene:{
+                preload: gamePreload,
+                create: gameCreate,
+                update: gameUpdate
+              },
+
+              physics:{
+                default:"arcade",
+                arcade:{
+                  debug:false
+                }
+              }
+
+          }
+      //updateItems();
+      var game = new Phaser.Game(config);
+
+      function gamePreload(){
+        console.log("preload");
+        //get tokens
+
+        // loading assets
+        //floors
+        this.load.image("floor1", "assets/PNG/Ground_tile_01_C.png");
+        this.load.image("floor2", "assets/PNG/Ground_tile_02_C.png");
+        //hero idle animation
+        this.load.image("hero", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_000.png");
+        //hero idle animation
+        this.load.image("hero_idle1", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_001.png");
+        this.load.image("hero_idle2", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_002.png");
+        this.load.image("hero_idle3", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_003.png");
+        this.load.image("hero_idle4", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_004.png");
+        this.load.image("hero_idle5", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_005.png");
+        this.load.image("hero_idle6", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_006.png");
+        this.load.image("hero_idle7", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_007.png");
+        this.load.image("hero_idle8", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_008.png");
+        this.load.image("hero_idle9", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_009.png");
+        this.load.image("hero_idle10", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_010.png");
+        this.load.image("hero_idle11", "assets/PNG/Wraith_01/PNG Sequences/Idle/Wraith_01_Idle_011.png");
+        //hero run animation
+        this.load.image("hero_run0", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_000.png");
+        this.load.image("hero_run1", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_001.png");
+        this.load.image("hero_run2", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_002.png");
+        this.load.image("hero_run3", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_003.png");
+        this.load.image("hero_run4", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_004.png");
+        this.load.image("hero_run5", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_005.png");
+        this.load.image("hero_run6", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_006.png");
+        this.load.image("hero_run7", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_007.png");
+        this.load.image("hero_run8", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_008.png");
+        this.load.image("hero_run9", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_009.png");
+        this.load.image("hero_run10", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_010.png");
+        this.load.image("hero_run11", "assets/PNG/Wraith_01/PNG Sequences/Walking/Wraith_01_Moving Forward_011.png");
+        //hero attack animation
+        this.load.image("hero_attack0", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_000.png");
+        this.load.image("hero_attack1", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_001.png");
+        this.load.image("hero_attack2", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_002.png");
+        this.load.image("hero_attack3", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_003.png");
+        this.load.image("hero_attack4", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_004.png");
+        this.load.image("hero_attack5", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_007.png");
+        this.load.image("hero_attack6", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_008.png");
+        this.load.image("hero_attack7", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_009.png");
+        this.load.image("hero_attack8", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_010.png");
+        this.load.image("hero_attack9", "assets/PNG/Wraith_01/PNG Sequences/Attacking/Wraith_01_Attack_011.png");
+        //bullet
+        this.load.image("bullet", "assets/PNG/Bombs/Fire_A.png");
+        //bullet hit animation
+        this.load.image("bullet_hit01", "assets/PNG/Bombs/Explosion_A_01.png");
+        this.load.image("bullet_hit02", "assets/PNG/Bombs/Explosion_A_02.png");
+        this.load.image("bullet_hit03", "assets/PNG/Bombs/Explosion_A_03.png");
+        this.load.image("bullet_hit04", "assets/PNG/Bombs/Explosion_A_04.png");
+        this.load.image("bullet_hit05", "assets/PNG/Bombs/Explosion_A_05.png");
+        //grunts
+        this.load.image("grunt", "assets/PNG/Golem_02/PNG Sequences/Idle/Golem_02_idle_000.png");
+        //grunt running
+        this.load.image("grunt_walking_00", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_000.png");
+        this.load.image("grunt_walking_01", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_001.png");
+        this.load.image("grunt_walking_02", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_002.png");
+        this.load.image("grunt_walking_03", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_003.png");
+        this.load.image("grunt_walking_04", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_004.png");
+        this.load.image("grunt_walking_05", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_005.png");
+        this.load.image("grunt_walking_06", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_006.png");
+        this.load.image("grunt_walking_07", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_007.png");
+        this.load.image("grunt_walking_08", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_008.png");
+        this.load.image("grunt_walking_09", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_009.png");
+        this.load.image("grunt_walking_10", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_010.png");
+        this.load.image("grunt_walking_11", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_011.png");
+        this.load.image("grunt_walking_12", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_012.png");
+        this.load.image("grunt_walking_13", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_013.png");
+        this.load.image("grunt_walking_14", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_014.png");
+        this.load.image("grunt_walking_15", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_015.png");
+        this.load.image("grunt_walking_16", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_016.png");
+        this.load.image("grunt_walking_17", "assets/PNG/Golem_02/PNG Sequences/Walking/Golem_02_Walking_017.png");
+        //grunt dying
+        this.load.image("grunt_dying_00", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_000.png");
+        this.load.image("grunt_dying_01", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_001.png");
+        this.load.image("grunt_dying_02", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_002.png");
+        this.load.image("grunt_dying_03", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_003.png");
+        this.load.image("grunt_dying_04", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_004.png");
+        this.load.image("grunt_dying_05", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_005.png");
+        this.load.image("grunt_dying_06", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_006.png");
+        this.load.image("grunt_dying_07", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_007.png");
+        this.load.image("grunt_dying_08", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_008.png");
+        this.load.image("grunt_dying_09", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_009.png");
+        this.load.image("grunt_dying_10", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_010.png");
+        this.load.image("grunt_dying_11", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_011.png");
+        this.load.image("grunt_dying_12", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_012.png");
+        this.load.image("grunt_dying_13", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_013.png");
+        this.load.image("grunt_dying_14", "assets/PNG/Golem_02/PNG Sequences/Dying/Golem_02_Dying_014.png");
+        //grunt attacking
+        this.load.image("grunt_attacking_00", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_000.png");
+        this.load.image("grunt_attacking_01", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_001.png");
+        this.load.image("grunt_attacking_02", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_002.png");
+        this.load.image("grunt_attacking_03", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_003.png");
+        this.load.image("grunt_attacking_04", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_004.png");
+        this.load.image("grunt_attacking_05", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_005.png");
+        this.load.image("grunt_attacking_06", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_006.png");
+        this.load.image("grunt_attacking_07", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_007.png");
+        this.load.image("grunt_attacking_08", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_008.png");
+        this.load.image("grunt_attacking_09", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_009.png");
+        this.load.image("grunt_attacking_10", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_010.png");
+        this.load.image("grunt_attacking_11", "assets/PNG/Golem_02/PNG Sequences/Attacking/Golem_02_Attacking_011.png");
+
+
+
+      }
+
+      function gameCreate(){
+        console.log("create");
+        updateItems();
+        //create floors
+        floor = this.physics.add.staticGroup();
+
+        floor.create(40,520, "floor1");
+        floor.create(290,520, "floor2");
+        floor.create(540,520, "floor2");
+        floor.create(790,520, "floor1");
+
+        floor.create(40,270, "floor1");
+        floor.create(290,270, "floor1");
+        floor.create(540,270, "floor2");
+        floor.create(790,270, "floor1");
+
+        floor.create(40,20, "floor2");
+        floor.create(290,20, "floor1");
+        floor.create(540,20, "floor2");
+        floor.create(790,20, "floor1");
+
+
+
+        //create hero
+        hero = this.physics.add.sprite(200,100,"hero");
+        hero.body.setSize(200,300, 10, 0);
+        hero.body.setBounce(1);
+        hero.scaleX = 0.23;
+        hero.scaleY = hero.scaleX;
+
+        //hero animations
+        this.anims.create({
+                  key: "hero_run",
+                  frames:[
+                  {key: "hero_run0"},
+                  {key: "hero_run1"},
+                  {key: "hero_run2"},
+                  {key: "hero_run3"},
+                  {key: "hero_run4"},
+                  {key: "hero_run5"},
+                  {key: "hero_run6"},
+                  {key: "hero_run7"},
+                  {key: "hero_run8"},
+                  {key: "hero_run9"},
+                  {key: "hero_run10"},
+                  {key: "hero_run11"}
+                  ],
+                  frameRate: 10,
+                  repeat: 1
+              });
+
+        this.anims.create({
+                        key: "hero_idle",
+                        frames:[
+                          {key: "hero_idle1"},
+                          {key: "hero_idle2"},
+                          {key: "hero_idle3"},
+                          {key: "hero_idle4"},
+                          {key: "hero_idle5"},
+                          {key: "hero_idle6"},
+                          {key: "hero_idle7"},
+                          {key: "hero_idle8"},
+                          {key: "hero_idle9"},
+                          {key: "hero_idle10"},
+                          {key: "hero_idle11"},
+                        ],
+                        frameRate: 11,
+                        repeat: 1
+                    });
+
+              //grunts animations
+
+        this.anims.create({
+            key: "grunt_walk",
+                              frames:[
+                                {key: "grunt_walking_00"},
+                                {key: "grunt_walking_01"},
+                                {key: "grunt_walking_02"},
+                                {key: "grunt_walking_03"},
+                                {key: "grunt_walking_04"},
+                                {key: "grunt_walking_05"},
+                                {key: "grunt_walking_06"},
+                                {key: "grunt_walking_07"},
+                                {key: "grunt_walking_08"},
+                                {key: "grunt_walking_09"},
+                                {key: "grunt_walking_10"},
+                                {key: "grunt_walking_11"},
+                                {key: "grunt_walking_12"},
+                                {key: "grunt_walking_13"},
+                                {key: "grunt_walking_14"},
+                                {key: "grunt_walking_15"},
+                                {key: "grunt_walking_16"},
+                                {key: "grunt_walking_17"}
+                              ],
+            frameRate: 12,
+            repeat: 1
+          });
+
+        this.anims.create({
+              key: "grunt_dying",
+                                frames:[
+                                  {key: "grunt_dying_00"},
+                                  {key: "grunt_dying_01"},
+                                  {key: "grunt_dying_02"},
+                                  {key: "grunt_dying_03"},
+                                  {key: "grunt_dying_04"},
+                                  {key: "grunt_dying_05"},
+                                  {key: "grunt_dying_06"},
+                                  {key: "grunt_dying_07"},
+                                  {key: "grunt_dying_08"},
+                                  {key: "grunt_dying_09"},
+                                  {key: "grunt_dying_10"},
+                                  {key: "grunt_dying_11"},
+                                  {key: "grunt_dying_12"},
+                                  {key: "grunt_dying_13"},
+                                  {key: "grunt_dying_14"}
+                                ],
+              frameRate: 12,
+              repeat: 0
+          });
+
+        this.anims.create({
+              key: "bullet_hit",
+                                frames:[
+                                  {key: "bullet_hit01"},
+                                  {key: "bullet_hit02"},
+                                  {key: "bullet_hit03"},
+                                  {key: "bullet_hit04"},
+                                  {key: "bullet_hit05"}
+                                ],
+              frameRate: 12,
+              repeat: 1
+          });
+        this.anims.create({
+              key: "grunt_attack",
+                                frames:[
+                                  {key: "grunt_attacking_00"},
+                                  {key: "grunt_attacking_01"},
+                                  {key: "grunt_attacking_02"},
+                                  {key: "grunt_attacking_03"},
+                                  {key: "grunt_attacking_04"},
+                                  {key: "grunt_attacking_05"},
+                                  {key: "grunt_attacking_06"},
+                                  {key: "grunt_attacking_07"},
+                                  {key: "grunt_attacking_08"},
+                                  {key: "grunt_attacking_09"},
+                                  {key: "grunt_attacking_10"},
+                                  {key: "grunt_attacking_11"}
+                                ],
+              frameRate: 10,
+              repeat: 1
+          });
+
+
+
+          cursors = this.input.keyboard.createCursorKeys();
+
+          this.input.on("pointerdown", pointer =>{
+                if(pauseFlag){return;}
+                //console.log(pointer.x + "  " + pointer.y +" II " +hero.x + "  " + hero.y);
+                //if attacking
+                if(attckCooldown === 0){
+                  //math
+                  var tan;
+                  if(pointer.x != hero.x){
+                    tan= (pointer.y - hero.y)/(pointer.x - hero.x);
+                  } else {
+                    tan = null;
+                  }
+                  //console.log(tan)
+                  //calculate x and y speed
+                  var x;
+                  var y;
+                  if(tan != null){
+                    if(tan < 0){
+                      tan = -tan;
+                    }
+                    x = Math.sqrt(225/(1+tan*tan));
+                    y = Math.sqrt(225-x*x);
+                  } else {
+                    x = 0;
+                    y=15;
+                  }
+
+                  if(pointer.y - hero.y<0 || pointer.x - hero.x>0){
+                    x = -x;
+                  }
+                  if(pointer.y - hero.y>0 || pointer.x - hero.x>0){
+                    y = -y;
+                    x =-x;
+                  }
+                  if(pointer.y - hero.y>0 || pointer.x - hero.x<0){
+                    y =-y;
+                  }
+
+                  //create bullet
+                  var spirit = this.physics.add.sprite(hero.x,hero.y,"bullet");
+                  spirit.body.setSize(30,30, 10, 0);
+                  spirit.scaleX = 0.6;
+                  spirit.scaleY = spirit.scaleX;
+
+
+                  var ret = {
+                    sprite : spirit,
+                    xSpeed : x,
+                    ySpeed : y
+                  }
+
+                  bullets[bulletCounter] = ret;
+                  bulletCounter += 1;
+                  console.log("created bullet");
+                  //set cooldown
+                  attckCooldown = 25 - asBonus;
+                  if(attckCooldown < 1){
+                    attckCooldown = 1;
+                  }
+
+                  //add colliders for grunts
+                  for(key in grunts){
+                    this.physics.add.overlap(spirit, grunts[key].grunt, gruntHit, null, this);
+                  }
+
+                }
+                return;
+              });
+
+              this.time.addEvent({ delay:5000,
+                                    callback: addGrunts,
+                                    callbackScope: this,
+                                    repeat: -1}
+                                );
+
+
+              spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+              hpText = this.add.text(16, 66, "HP : " + hp, { fontSize: '22px', fill: '#f0f' });
+              scoreText = this.add.text(16, 106, "Score : " + score, { fontSize: '22px', fill: '#f0f' });
+              savedScoreText = this.add.text(16, 146, "Saved score : " + savedScore, { fontSize: '22px', fill: '#f0f' });
+              movementText = this.add.text(16, 186, "Movement bonus : " + movementBonus, { fontSize: '22px', fill: '#f0f' });
+              asText =  this.add.text(16, 226, "Attack speed bonus : " + asBonus, { fontSize: '22px', fill: '#f0f' });
+
+              buyASbutton = this.add.text(300, 66, "Buy attack speed (250$)", { fontSize: '33px', fill: '#ff0' });
+              buyMovementbutton = this.add.text(300, 132, "Buy movement speed (500$)" , { fontSize: '33px', fill: '#ff0' });
+              buyHPbutton = this.add.text(300, 198, "Buy HP (750$)" , { fontSize: '33px', fill: '#ff0' });
+              saveScore = this.add.text(300, 264, "Save score (+$)" , { fontSize: '33px', fill: '#ff0' });
+              back = this.add.text(300, 360, "Return" , { fontSize: '33px', fill: '#f00' });
+              saving = this.add.text(250, 420, "Saving to blockchain.." , { fontSize: '33px', fill: '#f00' });
+              noscore = this.add.text(250, 450, "Need more saved score" , { fontSize: '33px', fill: '#f00' });
+
+
+              buyASbutton.visible = false;
+              buyMovementbutton.visible = false;
+              buyHPbutton.visible = false;
+              saveScore.visible = false;
+              back.visible = false;
+              saving.visible = false;
+              noscore.visible=false;
+
+
+              // buyASbutton.visible = true;
+              // buyMovementbutton.visible = true;
+              // buyHPbutton.visible = true;
+              // saveScore.visible = true;
+              // back.visible = true;
+
+              buyASbutton.setInteractive();
+              buyMovementbutton.setInteractive();
+              buyHPbutton.setInteractive();
+              saveScore.setInteractive();
+              back.setInteractive();
+              console.log("set interactive")
+
+              buyASbutton.on('pointerdown', async () => {
+                console.log('buying AS');
+                saving.visible = true;
+                if(savedScore < 250){
+                  console.log("Not enough saved score");
+                  noscore.visible = true;
+                  await sleep(10000);
+                  noscore.visible=false;
+                  saving.visible = false;
+                }
+                else{
+                  buy(2,1,(flag) => {
+                    if(flag){
+                      console.log("Updating");
+                      updateItems();
+                      saving.visible = false;
+                    }
+                  });
+                }
+              });
+              buyMovementbutton.on('pointerdown', async () => {
+                console.log('buying movement');
+                saving.visible = true;
+                if(savedScore < 500){
+                  console.log("Not enough saved score");
+                  saving.visible = false;
+                  noscore.visible = true;
+                  await sleep(10000);
+                  noscore.visible=false;
+
+                }
+                else{
+                  buy(3,1,(flag) => {
+                    if(flag){
+                      console.log("Updating");
+                      updateItems();
+                      saving.visible = false;
+                    }
+                  });
+                }
+              });
+              buyHPbutton.on('pointerdown',async () => {
+                console.log('buying HP');
+                saving.visible = true;
+                if(savedScore < 750){
+                  console.log("Not enough saved score");
+                  saving.visible = false;
+                  noscore.visible = true;
+                  await sleep(10000);
+                  noscore.visible=false;
+
+                }
+                else{
+                  buy(4,1,(flag) => {
+                    if(flag){
+                      console.log("Updating");
+                      updateItems();
+                      saving.visible = false;
+                    }
+                  });
+                }
+              });
+              saveScore.on('pointerdown', async () => {
+                console.log('Saving');
+                saving.visible = true;
+                if(score === 0){
+                  console.log("Not enough saved score");
+                  noscore.visible=false;
+                  noscore.visible = true;
+                  await sleep(10000);
+
+                }
+                else{
+                  buy(1,score,(flag) => {
+                    if(flag){
+                      console.log("Updating");
+                      updateItems();
+                      saving.visible = false;
+                      score = 0;
+                    }
+                  });
+                }
+              });
+              back.on('pointerdown', () => {
+                console.log('Returning to game');
+                buyASbutton.visible = false;
+                buyMovementbutton.visible = false;
+                buyHPbutton.visible = false;
+                saveScore.visible = false;
+                back.visible = false;
+                //this.physics.pause();
+                pauseFlag = false;
+                this.physics.resume();
+              });
+
+              console.log("finished");
+
+      }
+
+      function addGrunts(){
+        console.log("adding");
+        if(pauseFlag){return};
+
+          for(var i=0; i <5+level; i++){
+            var spirit =  this.physics.add.sprite(100,0 + 100*i,"grunt");
+            spirit.body.setSize(150,240, 10, 0);
+            spirit.body.setBounce(1);
+            spirit.scaleX = 0.16;
+            spirit.scaleY = spirit.scaleX;
+
+            ret = {
+              grunt : spirit,
+              hp :25,
+              attckCd : 0
+            }
+            grunts[gruntsCounter] = ret;
+            gruntsCounter += 1;
+            console.log("added to map");
+
+            //add collider for every bullet
+            for(key in bullets){
+              this.physics.add.overlap(bullets[key].sprite, spirit, gruntHit, null, this);
+            }
+            //add colider for hero
+            this.physics.add.collider(spirit, hero, (spirit, hero) =>{
+
+              if(spirit.body.touching.up){
+                //console.log("up")
+                spirit.body.setVelocityY(50);
+              } else
+              if(spirit.body.touching.down){
+                //console.log("down")
+                spirit.body.setVelocityY(-50);
+              } else if(spirit.body.touching.left){
+                //console.log("left")
+                spirit.body.setVelocityX(50);
+              } else if(spirit.body.touching.right){
+                //console.log("right")
+                spirit.body.setVelocityY(-50);
+              } else {
+                spirit.body.setVelocityY(0);
+              }
+            }, null, this);
+
+            //add colider for every other grunt
+            for(key in grunts){
+              if(grunts[key].grunt != spirit){
+                  this.physics.add.collider(spirit,grunts[key].grunt, (spirit) =>{
+                    if(spirit.body.touching.up){
+                      spirit.body.setVelocityY(50);
+                    } else
+                    if(spirit.body.touching.down){
+                      spirit.body.setVelocityY(-50);
+                    } else if(spirit.body.touching.left){
+                      spirit.body.setVelocityX(50);
+                    } else if(spirit.body.touching.right){
+                      spirit.body.setVelocityY(-50);
+                    }
+                  }, null, this);
+              }
+            }
+          }
+
+          level +=1;
+      }
+
+      async function gruntHit(bullet, grunt){
+        console.log(bullet);
+        var flag = false;
+        var scrMade = false;
+        for(key in grunts){
+          if(grunts[key].grunt == grunt){
+            console.log("putting damage")
+            grunts[key].hp -= damage;
+            if (grunts[key].hp <= 0) {flag = true;}
+          }
+        }
+        if(!flag){
+          grunt.body.setVelocityX(0);
+          grunt.body.setVelocityY(0);
+          for(key in grunts){
+            if(grunts[key].grunt === grunt){
+              delete grunts[key];
+            }
+          }
+        }
+        for(key in bullets){
+          if(bullets[key].sprite === bullet){
+            console.log("bullet deleted")
+            delete bullets[key];
+          }
+        }
+        //bullet Explosion
+        bullet.play("bullet_hit", true);
+        //grunt dies
+        if(!flag){grunt.play("grunt_dying", true);}
+        await sleep(400);
+        bullet.disableBody(true, true);
+        if(!flag){
+          await sleep(800);
+          grunt.disableBody(true, true);
+          score += 1;
+        }
+
+
+
+      }
+
+      function gameUpdate(){
+
+        scoreText.setText("Score : " + score);
+        hpText.setText("HP : " + hp);
+        savedScoreText.setText("Saved score : " + savedScore);
+        movementText.setText("Movement bonus : " + movementBonus);
+        asText.setText("Attack speed bonus : " + asBonus);
+
+        if(!hpflag){
+          if(!gavehp){
+            hp += parseInt(hpBonus);
+            hpflag = true;
+            gavehp = true;
+          } else {
+            hp += 1;
+            hpflag = true;
+          }
+
+        }
+        if(spaceCd > 0) {spaceCd -= 1}
+
+        if(gameOver || pauseFlag) {
+
+
+
+          if(spaceBar.isDown &&spaceCd === 0){
+            buyASbutton.visible = false;
+            buyMovementbutton.visible = false;
+            buyHPbutton.visible = false;
+            saveScore.visible = false;
+            back.visible = false;
+            //this.physics.pause();
+            pauseFlag = false;
+            this.physics.resume();
+            spaceCd = 60;
+            return;
+          }
+          return;
+        }
+
+
+
+        if(spaceBar.isDown&&spaceCd === 0){
+          this.physics.pause();
+          buyASbutton.visible = true;
+          buyMovementbutton.visible = true;
+          buyHPbutton.visible = true;
+          saveScore.visible = true;
+          back.visible = true;
+          this.physics.pause();
+          pauseFlag = true;
+          spaceCd = 60;
+          //this.physics.resume();
+        }
+
+
+
+        //reduce cooldown
+        if(attckCooldown > 0){
+          attckCooldown -= 1;
+        }
+
+        //move bullets
+        for (bullet in bullets){
+          bullets[bullet].sprite.x += bullets[bullet].xSpeed;
+          bullets[bullet].sprite.y += bullets[bullet].ySpeed;
+          //if out of bounds
+          if(bullets[bullet].sprite.x < -5 || bullets[bullet].sprite.y < -5 || bullets[bullet].sprite.x > 805 || bullets[bullet].sprite.y> 655 ){
+            bullets[bullet].sprite.disableBody(true, true);
+            delete bullets[bullet]
+          }
+        }
+
+        //move grunts
+        for(key in grunts){
+          //if close attack
+          if(Phaser.Math.Distance.Between(hero.x,hero.y,grunts[key].grunt.x,grunts[key].grunt.y) < 65){
+            if(hero.x - grunts[key].x<20){
+              grunts[key].grunt.flipX = true;
+            }
+            grunts[key].grunt.body.setVelocityX(0);
+            grunts[key].grunt.body.setVelocityY(0);
+            if(grunts[key].attckCd === 0){
+              grunts[key].grunt.play("grunt_attack", true);
+              hp -= 1;
+              if(hp === 0){gameOver = true;}
+              grunts[key].attckCd = 140;
+            } else {
+              grunts[key].grunt.play("grunt_attack", true);
+              grunts[key].attckCd -= 1;
+            }
+          }else {
+            if(hero.x -   grunts[key].grunt.x > 0){
+              grunts[key].grunt.body.setVelocityX(50+level*2);
+              grunts[key].grunt.flipX = false;
+            } else {
+              grunts[key].grunt.body.setVelocityX(-50-level*2);
+              if(hero.x - grunts[key].x<20){
+                grunts[key].grunt.flipX = true;
+              }
+            }
+            if(hero.y -   grunts[key].grunt.y > 0){
+              grunts[key].grunt.body.setVelocityY(50+level*2);
+            } else {
+              grunts[key].grunt.body.setVelocityY(-50-level*2);
+            }
+            grunts[key].grunt.play("grunt_walk", true);
+          }
+
+        }
+
+
+
+        if(cursors.left.isDown && cursors.up.isDown){
+                hero.body.setVelocityX(-(heroMS+movementBonus));
+                hero.body.setVelocityY(-(heroMS+movementBonus));
+                hero.play("hero_run",true);
+                hero.flipX = true;
+            }
+            else if(cursors.right.isDown && cursors.down.isDown){
+                hero.body.setVelocityX((heroMS+movementBonus));
+                hero.body.setVelocityY((heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = false;
+            }
+            else if(cursors.up.isDown && cursors.right.isDown){
+                hero.body.setVelocityX((heroMS+movementBonus));
+                hero.body.setVelocityY(-(heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = false;
+            }
+            else if(cursors.down.isDown && cursors.left.isDown){
+                hero.body.setVelocityX(-(heroMS+movementBonus));
+                hero.body.setVelocityY((heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = true;
+            }
+            else if(cursors.right.isDown){
+                hero.body.setVelocityX((heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = false;
+            }
+            else if(cursors.left.isDown){
+                hero.body.setVelocityX(-(heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = true;
+            }
+            else if(cursors.up.isDown){
+                hero.body.setVelocityY(-(heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = false;
+            }
+            else if(cursors.down.isDown){
+                hero.body.setVelocityY((heroMS+movementBonus));
+                hero.play("hero_run", true);
+                hero.flipX = false;
+            }
+            else{
+                hero.body.setVelocityX(0);
+                hero.body.setVelocityY(0);
+                hero.play("hero_idle", true);
+            }
+
+      }
+
+
+
+      function updateItems(){
+        getUserItems((items)=>{
+          console.log("callblack");
+          if(items === null){
+            savedScore = 0;
+            asBonus = 0;
+            movementBonus =0;
+            hpBonus = 0;
+          }
+          if(items.score === null){
+            savedScore=0;
+          }else{
+            savedScore = parseInt(items.score);
+          }
+          if(items.atspeed === null){
+            asBonus =0;
+          }else{
+            asBonus = parseInt(items.atspeed);
+          }
+          if(items.movement === null){
+            movementBonus =0;
+          }else{
+            movementBonus = parseInt(items.movement);
+          }
+          if(items.hp === null){
+            hpBonus =0;
+          }else{
+            hpBonus =parseInt(items.hp);
+            hpflag = false;
+          }
+        });
+      }
+
+    </script>
+
+
+  </body>
+</html>
